@@ -6,16 +6,33 @@ function App() {
   const [cardList, setCardList] = useState("");
   const [cards, setCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
+  // Printings
+  const [printings, setPrintings] = useState([]);
+  const [selectedPrinting, setSelectedPrinting] = useState(null);
+  // Loading
+  const [cardsLoading, setCardsLoading] = useState(false)
+
+  // More Robust List Pasting with a Parser
+  const parseCardList = (list) => {
+    console.log(cardList)
+    return list.split(/\r?\n|,/).map(line => {
+      return line
+        .replace(/^(\d+)?x?\s*/i, '') // Handle '4x [Card Name]'
+        .replace(/\s*\[.*\]$/, '') // Remove Set info in brackets
+        .replace(/\s*#.*$/, '') // Remove comments starting with '#'
+        .trim();
+    }).filter(Boolean); // Remove Empty Lines
+  }
 
   // Calling Scryfall API for cards
   const fetchCards = async () => {
     // Use regex and a map to handle different pasting formats.
-    const cardNames = cardList.split(/\r?\n/).map(name => name.trim()).filter(Boolean);
+    const cardNames = parseCardList(cardList)
     const fetchedCards = [];
 
     for (let name of cardNames) {
       try {
-        const response = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`);
+        const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
         const cardData = await response.json();
         fetchedCards.push(cardData);
       } catch (e) {
@@ -23,7 +40,42 @@ function App() {
       }
     }
     setCards(fetchedCards)
+    setCardsLoading(false)
   };
+
+  // Fetch printings for a given card
+  const fetchPrintings = async (card) => {
+    try {
+      const response = await fetch(card.prints_search_uri);
+      const data = await response.json();
+      setPrintings(data.data);
+      setSelectedPrinting(card);
+    } catch (e) {
+      console.error('Error fetching printings:', e);
+    }
+  }
+
+  // Update the Card image in the Grid
+  const updateCardInGrid = (updatedCard) => {
+    setCards((prevCards) =>
+      prevCards.map((card) => (card.id === updatedCard.id ? updatedCard : card))
+    );
+  };
+
+  // Handle old lingering card image in new modal
+  const handleCardClick = (card) => {
+    setSelectedCard(null);
+    setSelectedPrinting(null);
+    setTimeout(() => {
+      setSelectedCard(card);
+      fetchPrintings(card);
+    }, 0) // Updating occurs sequentially
+  }
+
+  const clearCards = () => {
+    setCardList("");
+    setCards([]);
+  }
 
   return (
     <div className="app">
@@ -38,14 +90,18 @@ function App() {
           value={cardList}
           onChange={(e) => setCardList(e.target.value)}
         ></textarea>
-        <button className="fetch-button" onClick={fetchCards}>Fetch Cards</button>
+        <button className="controls-button" onClick={() => {
+          fetchCards();
+          setCardsLoading(true)
+        }}>Fetch Cards</button>
+        <button className="controls-button" onClick={clearCards}>Clear Cards</button>
       </div>
       <div className="card-grid">
         {cards.map((card, index) => (
           <div
             key={index}
             className="card-container"
-            onClick={() => setSelectedCard(card)}
+            onClick={() => handleCardClick(card)}
           >
             <img
               className="card-image"
@@ -56,17 +112,40 @@ function App() {
         ))}
       </div>
       {selectedCard && (
-        <div className="card-modal" onClick={() => setSelectedCard(null)}>
+        <div className="card-modal">
+          <button
+            className="close-button"
+            onClick={() => setSelectedCard(null)}
+          >x</button>
           <div
             className="modal-content"
             onMouseMove={(e) => handleMouseMove(e)}
-            onMouseLeave={() => resetCardPosition()}
+            onMouseLeave={() => {
+              setTimeout(() => {
+                resetCardPosition()
+              }, 1000)
+            }}
           >
             <img
-              className="modal-card-image"
-              src={selectedCard.image_uris?.front || selectedCard.image_uris?.normal}
+              className="modal-card-image lighting-effect"
+              src={selectedPrinting?.image_uris?.front || selectedPrinting?.image_uris?.normal || selectedCard.image_uris?.front || selectedCard.image_uris?.normal}
               alt={selectedCard.name}
             />
+            <select
+              className="printings-dropdown"
+              onChange={(e) => {
+                const newPrinting = printings.find(printing => printing.id === e.target.value);
+                setSelectedPrinting(newPrinting);
+                const updatedCard = { ...selectedCard, image_uris: newPrinting.image_uris };
+                updateCardInGrid(updatedCard);
+              }}
+            >
+              {printings.map(printing => (
+                <option key={printing.id} value={printing.id}>
+                  {printing.set_name} ({printing.collector_number})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       )}
