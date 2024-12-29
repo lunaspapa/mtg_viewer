@@ -6,6 +6,16 @@ body {
   overflow: hidden;
 }
 
+#headline-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  margin: 0
+}
+
 .app {
   padding: 20px;
   display: flex;
@@ -97,7 +107,7 @@ body {
 
 .modal-content {
   position: relative;
-  width: 50%;
+  width: 40%;
   display: flex;
   flex-direction: column;
   justify-content: center;

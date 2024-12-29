@@ -15,7 +15,7 @@ function App() {
 
   // More Robust List Pasting with a Parser
   const parseCardList = (list) => {
-    console.log("LIST:: ", list.split(/\n/))
+    // console.log("LIST:: ", list.split(/\n/))
     const parsed = list.split(/\n/).map(line => {
       return line
         .replace(/^(\d+)?x?\s*/i, '') // Handle '4x [Card Name]'
@@ -83,7 +83,7 @@ function App() {
 
   return (
     <div className="app">
-      <div id="headline_container">
+      <div id="headline-container">
         <h1>Magic: The Gathering Card Viewer</h1>
         <h3>Interactive card viewing experience by Luis Sanchez.</h3>
       </div>
@@ -144,7 +144,7 @@ function App() {
             onMouseLeave={() => {
               setTimeout(() => {
                 resetCardPosition()
-              }, 1000)
+              }, 500)
             }}
           >
             <img
