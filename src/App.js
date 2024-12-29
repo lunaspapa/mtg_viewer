@@ -12,6 +12,8 @@ function App() {
   const [selectedPrinting, setSelectedPrinting] = useState(null);
   // Loading
   const [cardsLoading, setCardsLoading] = useState(false);
+  // Flipping Modal Cards
+  const [showBackFace, setShowBackFace] = useState(false);
 
   // More Robust List Pasting with a Parser
   const parseCardList = (list) => {
@@ -70,6 +72,7 @@ function App() {
   const handleCardClick = (card) => {
     setSelectedCard(null);
     setSelectedPrinting(null);
+    setShowBackFace(false);
     setTimeout(() => {
       setSelectedCard(card);
       fetchPrintings(card);
@@ -88,7 +91,6 @@ function App() {
         <h3>Interactive card viewing experience by Luis Sanchez.</h3>
       </div>
       <div className="controls">
-
         <textarea
           className="card-input"
           placeholder="Paste decklist or card names here..."
@@ -119,11 +121,27 @@ function App() {
                 className="card-container"
                 onClick={() => handleCardClick(card)}
               >
-                <img
+                {card.card_faces ? (
+                  <>
+                    <img
+                      className="card-image"
+                      src={card.card_faces[0].image_uris?.normal}
+                      alt={card.name}
+                    />
+                    <span className="double-faced-indicator">⇆</span>
+                  </>
+                ) : (
+                  <img
+                    className="card-image"
+                    src={card.image_uris?.normal}
+                    alt={card.name}
+                  />
+                )}
+                {/* <img
                   className="card-image"
                   src={card.image_uris?.front || card.image_uris?.normal}
                   alt={card.name}
-                />
+                /> */}
               </div>
             ))}
           </div>
@@ -149,9 +167,21 @@ function App() {
           >
             <img
               className="modal-card-image lighting-effect"
-              src={selectedPrinting?.image_uris?.front || selectedPrinting?.image_uris?.normal || selectedCard.image_uris?.front || selectedCard.image_uris?.normal}
+              src={
+                selectedCard.card_faces
+                  ? selectedCard.card_faces[showBackFace ? 1 : 0]?.image_uris?.normal
+                  : selectedPrinting?.image_uris?.normal || selectedCard.image_uris?.normal
+              }
               alt={selectedCard.name}
             />
+            {selectedCard.card_faces && (
+              <button
+                className="flip-button"
+                onClick={() => setShowBackFace(!showBackFace)}
+              >
+                Flip Card
+              </button>
+            )}
             <select
               className="printings-dropdown"
               onChange={(e) => {
