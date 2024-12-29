@@ -47,11 +47,22 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 20px;
   width: 80%;
-  max-height: 60vh;
+  max-height: 50vh;
   overflow-y: auto;
-  border: 2px solid #ccc;
   padding: 10px;
   border-radius: 8px;
+}
+
+::-webkit-scrollbar {
+  width: 20px;
+}
+
+::-webkit-scrollbar-track {
+  background: #252121;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #413b3b
 }
 
 .card-container {
@@ -95,13 +106,13 @@ body {
 }
 
 .modal-card-image {
-  width: 100%;
+  width: 50%;
   border-radius: 22px;
   transform-origin: center;
   transition: transform 0.1s ease, background 0.1s ease;
 }
 
-.lighting-effect {
+/* .lighting-effect {
   position: relative;
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.5);
   animation: shine 2s infinite;
@@ -119,7 +130,7 @@ body {
   100% {
     filter: brightness(1);
   }
-}
+} */
 
 .printings-dropdown {
   margin-top: 20px;

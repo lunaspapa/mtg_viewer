@@ -1,4 +1,5 @@
 import './App.css';
+import flow from './images/Flow 1.gif'
 import { useState } from 'react';
 
 function App() {
@@ -10,18 +11,21 @@ function App() {
   const [printings, setPrintings] = useState([]);
   const [selectedPrinting, setSelectedPrinting] = useState(null);
   // Loading
-  const [cardsLoading, setCardsLoading] = useState(false)
+  const [cardsLoading, setCardsLoading] = useState(false);
 
   // More Robust List Pasting with a Parser
   const parseCardList = (list) => {
-    console.log(cardList)
-    return list.split(/\r?\n|,/).map(line => {
+    console.log("LIST:: ", list.split(/\n/))
+    const parsed = list.split(/\n/).map(line => {
       return line
         .replace(/^(\d+)?x?\s*/i, '') // Handle '4x [Card Name]'
         .replace(/\s*\[.*\]$/, '') // Remove Set info in brackets
         .replace(/\s*#.*$/, '') // Remove comments starting with '#'
+        .replace(/^\/\/.*$/gm, '') // Remove lines starting with '//'
         .trim();
     }).filter(Boolean); // Remove Empty Lines
+    console.log(parsed)
+    return parsed;
   }
 
   // Calling Scryfall API for cards
@@ -84,6 +88,7 @@ function App() {
         <h3>Interactive card viewing experience by Luis Sanchez.</h3>
       </div>
       <div className="controls">
+
         <textarea
           className="card-input"
           placeholder="Paste decklist or card names here..."
@@ -94,28 +99,44 @@ function App() {
           fetchCards();
           setCardsLoading(true)
         }}>Fetch Cards</button>
-        <button className="controls-button" onClick={clearCards}>Clear Cards</button>
+
+        {cards && (
+          <button className="controls-button" onClick={clearCards}>Clear Cards</button>
+        )}
       </div>
-      <div className="card-grid">
-        {cards.map((card, index) => (
-          <div
-            key={index}
-            className="card-container"
-            onClick={() => handleCardClick(card)}
-          >
-            <img
-              className="card-image"
-              src={card.image_uris?.front || card.image_uris?.normal}
-              alt={card.name}
-            />
+      <>
+        {cardsLoading && (
+          <div className="loading-blip">
+            <img src={flow} alt="loading" />
+            <p>Fetching Cards...</p>
           </div>
-        ))}
-      </div>
+        )}
+        {!cardsLoading && (
+          <div className="card-grid">
+            {cards.map((card, index) => (
+              <div
+                key={index}
+                className="card-container"
+                onClick={() => handleCardClick(card)}
+              >
+                <img
+                  className="card-image"
+                  src={card.image_uris?.front || card.image_uris?.normal}
+                  alt={card.name}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </>
       {selectedCard && (
         <div className="card-modal">
           <button
             className="close-button"
-            onClick={() => setSelectedCard(null)}
+            onClick={(e) => {
+              setSelectedCard(null)
+              e.stopPropagation()
+            }}
           >x</button>
           <div
             className="modal-content"
@@ -148,8 +169,9 @@ function App() {
             </select>
           </div>
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 
   function handleMouseMove(e) {
